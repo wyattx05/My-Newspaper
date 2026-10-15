@@ -11,6 +11,15 @@ function updateEditionDate() {
   document.querySelector("#full-date").textContent = full.format(now);
   document.querySelector("#edition-short-date").textContent = short.format(now);
   document.querySelector("#clock").textContent = time.format(now);
+  const hour = now.getHours();
+  const edition = hour >= 5 && hour < 12
+    ? "Morning"
+    : hour >= 12 && hour < 17
+      ? "Mid-day"
+      : hour >= 17 && hour < 21
+        ? "Evening"
+        : "Nighttime";
+  document.querySelector("#edition-label").textContent = `${edition} edition`;
 }
 
 function firstText(parent, names) {
@@ -38,16 +47,32 @@ function parseFeed(xmlText, feed) {
     const rawDate = firstText(entry, ["pubDate", "published", "updated", "date"]);
     const parsedDate = rawDate ? new Date(rawDate) : null;
     const rawSummary = firstText(entry, ["description", "summary", "content", "encoded"]);
-    const summary = new DOMParser().parseFromString(rawSummary, "text/html").body.textContent.trim();
+    const summaryDocument = new DOMParser().parseFromString(rawSummary, "text/html");
+    const summary = summaryDocument.body.textContent.trim();
+    const image = findStoryImage(entry, summaryDocument);
 
     return {
       source: feed.name,
       title: firstText(entry, ["title"]) || "Untitled story",
       link: /^https?:\/\//i.test(link) ? link : "",
       summary,
+      image,
       published: parsedDate && !Number.isNaN(parsedDate.valueOf()) ? parsedDate.toISOString() : "",
     };
   });
+}
+
+function findStoryImage(entry, summaryDocument) {
+  const mediaImages = [
+    ...entry.getElementsByTagNameNS("*", "thumbnail"),
+    ...entry.getElementsByTagNameNS("*", "content"),
+  ];
+  const mediaUrl = mediaImages.map((image) => image.getAttribute("url"))
+    .find((url) => url && /^https?:\/\//i.test(url));
+  const enclosure = [...entry.getElementsByTagNameNS("*", "enclosure")]
+    .find((item) => item.getAttribute("type")?.startsWith("image/"))?.getAttribute("url");
+  const inlineImage = summaryDocument.querySelector("img")?.getAttribute("src");
+  return [mediaUrl, enclosure, inlineImage].find((url) => url && /^https?:\/\//i.test(url)) || "";
 }
 
 async function fetchFeed(feed) {
@@ -70,7 +95,21 @@ function renderStories(stories) {
 
   stories.forEach((story, index) => {
     const article = document.createElement("article");
-    article.className = `story${index === 0 ? " story-feature" : ""}`;
+    const layouts = ["story-feature", "story-side", "story-photo", "story-compact", "story-text-only"];
+    const layout = layouts[index % layouts.length];
+    const hasImage = Boolean(story.image) && layout !== "story-text-only";
+    article.className = `story ${layout}${hasImage ? " has-thumbnail" : ""}${!hasImage && layout === "story-feature" ? " no-thumbnail" : ""}`;
+
+    if (hasImage) {
+      const image = document.createElement("img");
+      image.className = "story-thumb";
+      image.src = story.image;
+      image.alt = "";
+      image.loading = "lazy";
+      image.decoding = "async";
+      image.addEventListener("error", () => image.remove(), { once: true });
+      article.append(image);
+    }
 
     const copy = document.createElement("div");
     copy.className = "story-copy";
@@ -104,14 +143,14 @@ function renderStories(stories) {
     container.append(article);
   });
 
-  document.querySelector("#story-count").textContent = String(stories.length).padStart(2, "0");
+  document.querySelector("#article-count").textContent = `${stories.length} ${stories.length === 1 ? "article" : "articles"}`;
 }
 
 async function loadEdition() {
   const status = document.querySelector("#feed-status");
   if (!Array.isArray(RSS_FEEDS) || RSS_FEEDS.length === 0) {
     status.hidden = true;
-    document.querySelector("#story-count").textContent = "00";
+    document.querySelector("#article-count").textContent = "0 articles";
     return;
   }
 
