@@ -1,11 +1,9 @@
 /*
  * YOUR RSS FEEDS
- * Add or remove outlet names and feed URLs here when you're ready to connect feeds.
+ * Add or remove outlet names and feed URLs here.
  * Example: { name: "The Verge", url: "https://www.theverge.com/rss/index.xml" }
  *
- * The front page stays empty while this list has no feeds.
- * Live RSS loading is not implemented yet; GitHub Pages cannot proxy feeds, and
- * many publishers block browser requests.
+ * The page checks these feeds whenever it loads.
  */
 const RSS_FEEDS = [
   { name: "9to5Mac", url: "https://9to5mac.com/feed/" },
