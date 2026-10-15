@@ -23,11 +23,21 @@
         <div class="paper-nav">
           <span class="article-count" id="article-count">0 articles</span>
           <span class="nav-date" id="full-date">Your daily reading, in one place</span>
+          <div class="display-controls">
+            <button class="settings-toggle" id="settings-toggle" type="button" aria-label="Display settings" aria-expanded="false" aria-controls="settings-menu" title="Display settings">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9m4 0h3M4 17h3m4 0h9M13 4v6M7 14v6" /></svg>
+            </button>
+            <div class="settings-menu" id="settings-menu" aria-label="Display settings" hidden>
+              <label><span>Hide thumbnails</span><input id="hide-thumbnails" type="checkbox" /></label>
+              <label><span>Black &amp; white thumbnails</span><input id="grayscale-thumbnails" type="checkbox" /></label>
+              <label><span>Dark mode</span><input id="dark-mode" type="checkbox" /></label>
+            </div>
+          </div>
         </div>
       </header>
 
       <section class="front-page" id="front-page" aria-labelledby="section-heading">
-        <div class="section-heading"><span class="section-kicker">Today’s edition</span><h1 id="section-heading">The front page</h1><span class="section-aside">Selected reading · <span id="edition-short-date"></span></span></div>
+        <div class="section-heading"><h1 id="section-heading">The front page</h1><span class="section-aside">Selected reading · <span id="edition-short-date"></span></span></div>
         <p class="feed-status" id="feed-status" role="status" aria-live="polite">Loading your edition…</p>
         <div class="paper-grid" id="stories"></div>
       </section>

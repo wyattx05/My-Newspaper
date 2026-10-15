@@ -1,6 +1,55 @@
 const CORS_PROXY = "https://proxy.cors.dev/";
 const STORIES_PER_FEED = 4;
 const MAX_STORIES = 28;
+const paper = document.querySelector(".paper");
+const displaySettings = {
+  hideThumbnails: document.querySelector("#hide-thumbnails"),
+  grayscaleThumbnails: document.querySelector("#grayscale-thumbnails"),
+  darkMode: document.querySelector("#dark-mode"),
+};
+
+function readSetting(name) {
+  try { return localStorage.getItem(`mydaily-${name}`) === "true"; }
+  catch { return false; }
+}
+
+function saveSetting(name, value) {
+  try { localStorage.setItem(`mydaily-${name}`, String(value)); }
+  catch { /* The display preference still applies for this page view. */ }
+}
+
+function applyDisplaySettings() {
+  paper.classList.toggle("hide-thumbnails", displaySettings.hideThumbnails.checked);
+  paper.classList.toggle("grayscale-thumbnails", displaySettings.grayscaleThumbnails.checked);
+  paper.classList.toggle("dark-mode", displaySettings.darkMode.checked);
+  document.body.classList.toggle("dark-mode", displaySettings.darkMode.checked);
+}
+
+for (const [name, input] of Object.entries(displaySettings)) {
+  input.checked = readSetting(name);
+  input.addEventListener("change", () => {
+    saveSetting(name, input.checked);
+    applyDisplaySettings();
+  });
+}
+applyDisplaySettings();
+
+const settingsToggle = document.querySelector("#settings-toggle");
+const settingsMenu = document.querySelector("#settings-menu");
+function setSettingsMenu(open) {
+  settingsMenu.hidden = !open;
+  settingsToggle.setAttribute("aria-expanded", String(open));
+}
+settingsToggle.addEventListener("click", () => setSettingsMenu(settingsMenu.hidden));
+document.addEventListener("click", (event) => {
+  if (!event.target.closest(".display-controls")) setSettingsMenu(false);
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !settingsMenu.hidden) {
+    setSettingsMenu(false);
+    settingsToggle.focus();
+  }
+});
 
 function updateEditionDate() {
   const now = new Date();
@@ -95,21 +144,8 @@ function renderStories(stories) {
 
   stories.forEach((story, index) => {
     const article = document.createElement("article");
-    const layouts = ["story-feature", "story-side", "story-photo", "story-compact", "story-text-only"];
-    const layout = layouts[index % layouts.length];
-    const hasImage = Boolean(story.image) && layout !== "story-text-only";
-    article.className = `story ${layout}${hasImage ? " has-thumbnail" : ""}${!hasImage && layout === "story-feature" ? " no-thumbnail" : ""}`;
-
-    if (hasImage) {
-      const image = document.createElement("img");
-      image.className = "story-thumb";
-      image.src = story.image;
-      image.alt = "";
-      image.loading = "lazy";
-      image.decoding = "async";
-      image.addEventListener("error", () => image.remove(), { once: true });
-      article.append(image);
-    }
+    const isLead = index === 0;
+    article.className = `story${isLead ? " story-feature" : ""}`;
 
     const copy = document.createElement("div");
     copy.className = "story-copy";
@@ -138,9 +174,34 @@ function renderStories(stories) {
       headline.textContent = story.title;
     }
     copy.append(headline);
-    if (story.summary) addText(copy, "p", "", story.summary.slice(0, 280));
+    if (story.summary) addText(copy, "p", "story-summary", story.summary.slice(0, 360));
     article.append(copy);
+
+    let imageToLoad = null;
+    if (story.image) {
+      const image = document.createElement("img");
+      image.className = "story-thumb";
+      image.alt = "";
+      image.loading = index < 5 ? "eager" : "lazy";
+      image.decoding = "async";
+      image.addEventListener("load", () => {
+        const ratio = image.naturalWidth / image.naturalHeight;
+        const isWide = ratio > 1.3;
+        image.classList.add(isWide ? "thumb-top" : "thumb-inline");
+        article.classList.add(isWide ? "has-wide-thumbnail" : "has-inline-thumbnail");
+        image.style.aspectRatio = `${image.naturalWidth} / ${image.naturalHeight}`;
+
+        if (isLead && isWide) article.insertBefore(image, copy);
+        else if (isWide) copy.prepend(image);
+        else copy.querySelector(".story-meta").after(image);
+      }, { once: true });
+      image.addEventListener("error", () => image.remove(), { once: true });
+      article.append(image);
+      imageToLoad = image;
+    }
+
     container.append(article);
+    if (imageToLoad) imageToLoad.src = story.image;
   });
 
   document.querySelector("#article-count").textContent = `${stories.length} ${stories.length === 1 ? "article" : "articles"}`;
