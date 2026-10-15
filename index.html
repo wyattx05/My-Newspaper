@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f4f1e8" />
+    <meta name="description" content="A personal front page for the stories you follow." />
+    <title>MyDaily — Front Page</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="paper">
+      <header class="masthead">
+        <div class="edition-line"><span id="edition-date">Wednesday, October 14</span><span class="edition-dot">•</span><span>Morning edition</span><span class="edition-dot">•</span><span>No. 1</span><time id="clock" aria-label="Current time">--:--</time></div>
+        <div class="masthead-main">
+          <a class="paper-name" href="./" aria-label="MyDaily front page">MyDaily<span class="name-period">.</span></a>
+          <div class="masthead-note">A front page made for you</div>
+        </div>
+        <div class="rule-double" aria-hidden="true"></div>
+        <nav class="paper-nav" aria-label="Sections">
+          <a class="nav-current" href="#front-page">Front page <span id="story-count">00</span></a>
+          <span class="nav-date" id="full-date">Your daily reading, in one place</span>
+        </nav>
+      </header>
+
+      <section class="front-page" id="front-page" aria-labelledby="section-heading">
+        <div class="section-heading"><span class="section-kicker">Today’s edition</span><h1 id="section-heading">The front page</h1><span class="section-aside">Selected reading · <span id="edition-short-date"></span></span></div>
+        <div class="paper-grid" id="stories"></div>
+      </section>
+
+      <footer class="paper-footer"><span>Printed for curious minds.</span><span>Made for your morning read <span class="footer-star">✳</span></span></footer>
+    </main>
+    <script src="feeds.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
